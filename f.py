@@ -8,7 +8,7 @@ import os
 from pystyle import Anime, Colors, Colorate, Center
 
 # === Telegram Bot Setup ===
-TOKEN = "YOUR_BOT_TOKEN"   # <- BotFather se milega
+TOKEN = "8294178048:AAFHWvl_MS9VdLsCsl9p28hNSq1nZIp1AXg"   # <- BotFather se milega
 bot = telebot.TeleBot(TOKEN)
 
 # === Fake User Agent ===
